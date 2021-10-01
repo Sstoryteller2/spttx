@@ -1,2 +1,2 @@
 # spttx
-bash script for eccess to yandex speech kit
+bash script for access to yandex speech kit
