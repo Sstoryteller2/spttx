@@ -65,7 +65,7 @@ fi
 echo -n "проверка установки pandoc: "
 if ! command -v pandoc &> /dev/null 
 then
-       echo "необходиму уставноить ffmpeg"
+       echo "необходиму уставноить pandoc"
        sudo apt install pandoc       
 else 
 	echo "ok"
