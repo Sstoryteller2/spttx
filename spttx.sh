@@ -406,6 +406,7 @@ if [[ $model == "deferred-general" ]]; then
 	sed -i "s/\$4/$def_name/" $def_name 
 	sed -i "s/\$5/$def_t/" $def_name 
 	sed -i "s/\$6/$def_l/" $def_name 
+	sed -i "s/\$7/$key/" $def_name 
 	path=$(realpath $def_name)
 	curl -sH "Authorization: Api-Key $key" \
 					https://operation.api.cloud.yandex.net/operations/$id > ready_tst
