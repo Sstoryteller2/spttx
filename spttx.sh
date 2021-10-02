@@ -38,8 +38,8 @@ echo "
 Выбранные настройки:
 1. Язык: $lng
 2. Числа: $nm
-3. Обсцентаня лексика (мат): $obc
-4. Время отложенного расознания: $dfdf $def_l $def_t
+3. Обсценная лексика (мат): $obc
+4. Время отложенного распознания: $dfdf $def_l $def_t
 5. TOKEN $tok
 
 "
@@ -259,7 +259,6 @@ fi
 echo "
 минут на выполнение примерно: " $(bc -l <<< "scale=2; $seconds / 600"); 
 date=$(date)
-operation=$(echo $file_out | head -c 3 & echo "`date +"%H%M%d%m%y"`" | head -c 10 & echo $model | head -c 4)
 
 # расчет цены
 price=$(bc -l <<< "scale=2; $prc * $seconds")
@@ -268,12 +267,9 @@ if [[ $chanl = "2" ]]; then
 	echo "
 	цена двойная (за каждый поток) лучше свести каналы:" $(bc -l <<< "scale=2; $price * 2") "руб."
 fi
-if [[ $chanl = "N" ]]; then
+if [[ $chanl == "N" || $chanl == "1" ]]; then
 	echo "
 	цена за один канал: " $price
-else
-	echo "
-	цена:" $price "руб".
 fi
 
 
