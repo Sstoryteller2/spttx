@@ -1,6 +1,49 @@
 #!/bin/bash
 clear
 echo "Расшифровка звука"
+sed -i 's/[[:blank:]]*$//' data
+lang=$(grep "languageCode" data | sed 's/.* //')
+if [[ "$lang" == "ru-RU" ]]; then
+	lng="русский"
+fi
+if [[ "$lang" == "kk-KK" ]]; then
+	lng="казахский"
+fi
+nums=$(grep "rawResults" data | sed 's/.* //')
+if [[ "$nums" == "false" ]]; then
+	nm="цифрами"
+fi
+if [[ "$nums" == "true" ]]; then
+	nm="словами"
+fi
+obsc=$(grep "profanityFilter" data | sed 's/.* //')
+if [[ "$obsc" == "false" ]]; then
+	obc="мат вкл"
+fi
+if [[ "$obsc" == "true" ]]; then
+	obc="мат выкл"
+fi
+
+def_t=$(grep "def_t" data | sed 's/.* //')
+def_l=$(grep "def_l" data | sed 's/.* //')
+key=$(grep "key" data | sed 's/.* //')
+
+if [[ "$key" ]]; then
+	tok="yes"
+	else
+		tok="no"
+fi
+echo "
+
+Выбранные настройки:
+1. Язык: $lng
+2. Числа: $nm
+3. Обсцентаня лексика (мат): $obc
+4. Время отложенного расознания: $dfdf $def_l $def_t
+5. TOKEN $tok
+
+"
+
 echo -n "проверка установки ffmpeg: "
 if ! command -v ffmpeg &> /dev/null 
 then
@@ -290,8 +333,26 @@ fi
 
 # прогноз времени ответа на запрос на распознание (в 10 раз быстрее хронометража кроме отложенной модели)
 let "slp=($seconds/10)"
-let "df_slp=($slp+70)"
-echo $slp, $df_slp
+echo $slp, $def_l, $def_t
+
+# создаём файл для запроса params.json
+#./bd-tm $upload $model
+
+cat > params.json << -EOF
+{
+	"config": {
+	"specification": {
+			"languageCode": "$lang",
+			"model": "$model",
+            		"profanityFilter": "$obsc",
+			"rawResults": "$nums"
+		}
+	},
+	"audio": {
+		"uri": "https://storage.yandexcloud.net/rash2/$upload"
+	}
+}
+-EOF
 
 # отправка файла в яндекс
 while [[ $fold != "y" || $fold != "n" ]]; do
@@ -322,12 +383,11 @@ while [[ $fold != "y" || $fold != "n" ]]; do
 		fi
 done
 
-# создаём файл для запроса params.json
-./bd-tm $upload $model
+
 
 log_name=$(echo log_$file_out"`date +"_%d-%m-%Y_%H%M"`"_$model.txt)
 curl -sX POST \
-	-H "Authorization: Api-Key AQVN2gg0Y6LodEc6Rh4QG1iWIMA1DsvXsowiP6o3" \
+	-H "Authorization: Api-Key $key" \
     	-d '@params.json' \
 	https://transcribe.api.cloud.yandex.net/speech/stt/v2/longRunningRecognize > logs/$log_name 
 send=$(date)
@@ -336,7 +396,7 @@ echo "file out:" $file_out
 
 #отложенная коневертация
 if [[ $model == "deferred-general" ]]; then
-	answ=$(date -d "now + $df_slp sec" +'%H:%M')
+	answ=$(date -d "now + $def_l $def_t" +'%H:%M')
 	def_time=$(date -d "now + 1 min" +%H:%M)
 	def_name=$(echo def_"`date +"%H%M_%d-%m-%Y"`".sh)
 	cp deferred.sh $def_name
@@ -344,13 +404,14 @@ if [[ $model == "deferred-general" ]]; then
 	sed -i "s/\$2/$file_out/" $def_name 
 	sed -i "s/\$3/$upload/" $def_name 	
 	sed -i "s/\$4/$def_name/" $def_name 
-	sed -i "s/\$5/$df_slp/" $def_name 
+	sed -i "s/\$5/$def_t/" $def_name 
+	sed -i "s/\$6/$def_l/" $def_name 
 	path=$(realpath $def_name)
-	curl -sH "Authorization: Api-Key AQVN2gg0Y6LodEc6Rh4QG1iWIMA1DsvXsowiP6o3" \
+	curl -sH "Authorization: Api-Key $key" \
 					https://operation.api.cloud.yandex.net/operations/$id > ready_tst
 	ready=$(grep 'done' ready_tst | sed 's/^.*: //' | sed 's/,*$//')
 	echo $path | at $answ
-	echo "Сформирован скрипт $def_name для получения результата, который автоматически будет запущен после $answ (можно запустить вручную раньше) "
+	echo "Сформирован скрипт $def_name, он будет автоматически запущен после $answ (можно запустить вручную раньше) "
 	exit;
 fi
 
@@ -364,14 +425,14 @@ while [ "$date1" -ge `date +%s` ]; do
 done
 echo
 
-curl -sH "Authorization: Api-Key AQVN2gg0Y6LodEc6Rh4QG1iWIMA1DsvXsowiP6o3" \
+curl -sH "Authorization: Api-Key $key" \
 	https://operation.api.cloud.yandex.net/operations/$id > ready_tst
 
 ready=$(grep 'done' ready_tst | sed 's/^.*: //' | sed 's/,*$//')
 echo test status: $ready
 if [[ $ready == "false" ]]; then
 	while [[ $ready == "false" ]]; do
-		curl -sH "Authorization: Api-Key AQVN2gg0Y6LodEc6Rh4QG1iWIMA1DsvXsowiP6o3" \
+		curl -sH "Authorization: Api-Key $key" \
 			https://operation.api.cloud.yandex.net/operations/$id > ready_tst
 		ready=$(grep 'done' ready_tst | sed 's/^.*: //' | sed 's/,*$//')
 		echo "Обработка не завершена, до следующего запроса: "

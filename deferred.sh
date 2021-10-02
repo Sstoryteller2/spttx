@@ -4,7 +4,8 @@ id=$1
 file_out=$2
 upload=$3
 def_name=$4
-long=$5
+def_t=$5
+def_l=$6
 path=$(realpath $def_name)
 pth_log=$(realpath def_logs)
 pth=$(pwd)
@@ -13,7 +14,7 @@ curl -sH "Authorization: Api-Key AQVN2gg0Y6LodEc6Rh4QG1iWIMA1DsvXsowiP6o3" \
 	https://operation.api.cloud.yandex.net/operations/$id > $pth/ready_tst
 ready=$(grep 'done' ready_tst | sed 's/^.*: //' | sed 's/,*$//')
 if [[ $ready == "false" ]]; then
-	answ=$(date -d "now + $long sec" +'%H:%M')
+	answ=$(date -d "now + $def_l $def_t" +'%H:%M')
 	date >> $pth_log
 	echo $ready Не готово, след запуск $answ >> $pth_log 
 	echo $path | at $answ 2>> $pth_log

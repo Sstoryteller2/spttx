@@ -1,25 +1,58 @@
 #!/bin/bash
 clear
+sed -i 's/[[:blank:]]*$//' data
 echo 
-lng="(русский)"
-nm="(цифрами)"
-obc="(мат вкл)"
-def1="sec"
-def2=70
+lang=$(grep "languageCode" data | sed 's/.* //')
+if [[ "$lang" == "ru-RU" ]]; then
+	lng="русский"
+fi
+if [[ "$lang" == "kk-KK" ]]; then
+	lng="казахский"
+fi
+nums=$(grep "rawResults" data | sed 's/.* //')
+if [[ "$nums" == "false" ]]; then
+	nm="цифрами"
+fi
+if [[ "$nums" == "true" ]]; then
+	nm="словами"
+fi
+obsc=$(grep "profanityFilter" data | sed 's/.* //')
+if [[ "$obsc" == "false" ]]; then
+	obc="мат вкл"
+fi
+if [[ "$obsc" == "true" ]]; then
+	obc="мат выкл"
+fi
 
-while [[ $REPLY != [0-4] ]]; do
+def_t=$(grep "def_t" data | sed 's/.* //')
+def_l=$(grep "def_l" data | sed 's/.* //')
+key=$(grep "key" data | sed 's/.* //')
+
+if [[ "$key" ]]; then
+	tok="yes"
+	else
+		tok="no"
+fi
+
+token=0
+
+while [[ $REPLY != [0-5]  ]]; do
 	read -p "Выберите настройки:
 1. Язык (русский, казахский): $lng
 2. Числа: словами или цифрами: $nm
-3. Обсцентаня лексика (мат): оставлять или уирать $obc
-4. Время отложенного расознанияш: $def2 $def1
+3. Обсцентаня лексика (мат): $obc
+4. Время отложенного расознания: $dfdf $def_l $def_t
+5. TOKEN $tok
 
 0. Выход
 "
-	if [[ "$REPLY" =~ ^[0-4]$ ]]; then
+	if [[ "$REPLY" =~ ^[0-5]$ ]]; then
 		if [[ "$REPLY" == 0 ]]; then
+			if [[ "$tok" != "yes" ]]; then
+				echo "Без токена работать не будет"
+			fi
 			echo bye-bye
-			exit
+			break			
 		fi
 		
 		if [[ "$REPLY" == 1 ]]; then
@@ -37,13 +70,15 @@ while [[ $REPLY != [0-4] ]]; do
 						break 
 					fi
 					if [[ "$REPLY" == 1 ]]; then
-						lang="ru-RU"
+						sed -i "s/languageCode $lang/languageCode ru-RU/" data
 						lng="(!русский)"
 						echo "выбран русский язык"
+						lang="ru-RU"
 						REPLY=NULL				
 						break;				
 					fi
 					if [[ "$REPLY" == 2 ]]; then
+						sed -i "s/languageCode $lang/languageCode kk-KK/" data
 						lang="kk-KK"
 						lng="(!казахша)"
 						echo "казахша бердым"
@@ -70,6 +105,7 @@ while [[ $REPLY != [0-4] ]]; do
 						break 
 					fi
 					if [[ "$REPLY" == 1 ]]; then
+						sed -i "s/rawResults $nums/rawResults false/" data
 						nums="false"
 						nm="(!цифрами)"
 						echo $nm
@@ -77,6 +113,7 @@ while [[ $REPLY != [0-4] ]]; do
 						break;				
 					fi
 					if [[ "$REPLY" == 2 ]]; then
+						sed -i "s/rawResults $nums/rawResults true/" data
 						nums="true"
 						nm="(!словами)"
 						echo $nm						
@@ -103,6 +140,7 @@ while [[ $REPLY != [0-4] ]]; do
 						break 
 					fi
 					if [[ "$REPLY" == 1 ]]; then
+						sed -i "s/profanityFilter $obsc/profanityFilter false/" data
 						obsc="false"
 						obc="(!мат вкл)"
 						echo $nm
@@ -110,6 +148,7 @@ while [[ $REPLY != [0-4] ]]; do
 						break;				
 					fi
 					if [[ "$REPLY" == 2 ]]; then
+						sed -i "s/profanityFilter $obsc/profanityFilter true/" data
 						obsc="true"
 						obc="(!мат выкл)"
 						echo $nm						
@@ -135,60 +174,112 @@ while [[ $REPLY != [0-4] ]]; do
 			"
 				if [[ "$REPLY" =~ ^[0-4]$ ]]; then
 					if [[ "$REPLY" == 0 ]]; then
-						REPLY=NULL	
+						REPLY=NULL				
 						break 
 					fi
 					if [[ "$REPLY" == 1 ]]; then
 						REPLY=NULL				
-						def1="sec"
-						echo -n "Введите количество секунд: "
-						read def2
-						echo $def2 $def1
-						
-
-						break;				
+						def_ty="sec"
+						break
 					fi
 					if [[ "$REPLY" == 2 ]]; then
 						REPLY=NULL				
-						def1="min"
-						echo -n "Введите количество минут: "
-						read def2
-						echo $def2 $def1
-						break;				
+						def_ty="min"
+						break
 					fi
 					if [[ "$REPLY" == 3 ]]; then
 						REPLY=NULL				
-						def1="hour"
-						echo -n "Введите количество часов: "
-						read def2
-						if [[ $def2 =~ ^[0-60]$ ]]; then
-							echo $def2 $def1
-							break;			
-						break;
-					break;
-				break;
-						else
-							echo "введите число от 1 до 60"
-							
-						fi
+						def_ty="hour"
+						break;	
 					fi
 					if [[ "$REPLY" == 4 ]]; then
 						REPLY=NULL				
-						def1="days"
-
-						echo -n "Введите количество дней: "
-						read def2
-						echo $def2 $def1
+						def_ty="days"
 						break;				
 					fi
 				else
 					echo "введите числа от 0 до 2"
-				fi
-			done		
-			echo ok
+				fi				
+		
+			done
+			if [[ $def_ty ]]; then
+				sed -i "s/def_t $def_t/def_t $def_ty/" data
+				def_t=$def_ty
+			
+				while :; do
+					echo  "Введите число от 1 до 60 "
+					read num
+					[[ $num =~ ^[0-9]+$ ]] || { echo "Enter a valid number"; continue; }	
+					if (($num >= 1 && $num <= 60)); then
+						sed -i "s/def_l $def_l/def_l $num/" data
+						dfdf="!"
+ 						def_l=$num
+				       		break	       
+					fi
+				done
+			fi
 		fi
+		if [[ "$REPLY" == 5 ]]; then
+			REPLY=NULL
+			while [[ "$token" == "0" ]]; do
+				echo  "вставьте токен (0 - вернуться)  "
+				read token
+				if [[ "$token" == "0" ]]; then
+					tok="no"
+					break;
+				fi
+				if [[  "$token" && "$token" != "0" ]]; then
+					echo "токен добавлен"
+					sed -i "s/key $key/key $token/" data
+					tok="yes"	
+					break			
+				fi
+			done
+		fi
+
 	else
 		echo "введите числа от 0 до 4"
 	fi
 done
 
+lang=$(grep "languageCode" data | sed 's/.* //')
+if [[ "$lang" == "ru-RU" ]]; then
+	lng="русский"
+fi
+if [[ "$lang" == "kk-KK" ]]; then
+	lng="казахский"
+fi
+nums=$(grep "rawResults" data | sed 's/.* //')
+if [[ "$nums" == "false" ]]; then
+	nm="цифрами"
+fi
+if [[ "$nums" == "true" ]]; then
+	nm="словами"
+fi
+obsc=$(grep "profanityFilter" data | sed 's/.* //')
+if [[ "$obsc" == "false" ]]; then
+	obc="мат вкл"
+fi
+if [[ "$obsc" == "true" ]]; then
+	obc="мат выкл"
+fi
+
+def_t=$(grep "def_t" data | sed 's/.* //')
+def_l=$(grep "def_l" data | sed 's/.* //')
+key=$(grep "key" data | sed 's/.* //')
+
+if [[ "$key" ]]; then
+	tok="yes"
+	else
+		tok="no"
+fi
+echo "
+
+Выбранные настройки:
+1. Язык (русский, казахский): $lng
+2. Числа: словами или цифрами: $nm
+3. Обсцентаня лексика (мат): $obc
+4. Время отложенного расознания: $dfdf $def_l $def_t
+5. TOKEN $tok
+"
+exit
