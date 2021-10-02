@@ -1,0 +1,7 @@
+settings:
+languageCode ru-RU
+profanityFilter false
+rawResults true
+def_t min
+def_l 10
+key 0

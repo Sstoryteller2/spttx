@@ -27,8 +27,11 @@ fi
 def_t=$(grep "def_t" data | sed 's/.* //')
 def_l=$(grep "def_l" data | sed 's/.* //')
 key=$(grep "key" data | sed 's/.* //')
-
-if [[ "$key" ]]; then
+echo key $key
+if [[ "$key" == 0 ]]; then
+	tok="no"
+fi
+if [[ "$key" && "$key" != 0 ]]; then
 	tok="yes"
 	else
 		tok="no"
@@ -229,7 +232,8 @@ while [[ $REPLY != [0-5]  ]]; do
 				if [[  "$token" && "$token" != "0" ]]; then
 					echo "токен добавлен"
 					sed -i "s/key $key/key $token/" data
-					tok="yes"	
+					tok="yes"
+					token=0	
 					break			
 				fi
 			done
