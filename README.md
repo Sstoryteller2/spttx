@@ -1,7 +1,7 @@
 # spttx 
-bash script for access to Yandex SpeechKit longRunningRecognize  Ubuntu
+bash script for access to Yandex SpeechKit longRunningRecognize Ubuntu
 
-Скрипт для упрощения работы с сервисом Yandex SpeechKit распознание длинных аудио. 
+Скрипт для упрощения работы с сервисом Yandex SpeechKit распознание длинных аудио (работает на Ubuntu).
 
 Перед началом:
 Чтобы скрипт работал нужно завести пользовательский аккаунт на Яндекс-облаке, создать бакет, создать сервисный аккаунт (https://cloud.yandex.ru/docs/speechkit/quickstart), <b>получить ключ API</b>. Это всё делается в интерфейсе Яндекс Облака. Положить на счёт денежку.
