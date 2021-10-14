@@ -27,21 +27,25 @@ fi
 def_t=$(grep "def_t" data | sed 's/.* //')
 def_l=$(grep "def_l" data | sed 's/.* //')
 key=$(grep "key" data | sed 's/.* //')
-
-if [[ "$key" ]]; then
+if [[ "$key" && "$key" != 0 ]]; then
 	tok="yes"
 	else
 		tok="no"
 fi
+
+cld=$(grep "cloud" data | sed 's/.* //')
+if [[ "$cld" == 0 ]]; then
+	        cld="no"
+fi
 echo "
 
 Выбранные настройки:
-1. Язык: $lng
-2. Числа: $nm
+1. Язык (русский, казахский): $lng
+2. Числа: словами или цифрами: $nm
 3. Обсценная лексика (мат): $obc
 4. Время отложенного распознания: $dfdf $def_l $def_t
 5. TOKEN $tok
-
+6. Название облака (https://storage.yandexcloud.net/$cld/) $cld
 "
 
 echo -n "проверка установки ffmpeg: "
@@ -332,7 +336,6 @@ let "slp=($seconds/10)"
 echo $slp, $def_l, $def_t
 
 # создаём файл для запроса params.json
-#./bd-tm $upload $model
 
 cat > params.json << -EOF
 {
@@ -345,7 +348,7 @@ cat > params.json << -EOF
 		}
 	},
 	"audio": {
-		"uri": "https://storage.yandexcloud.net/rash2/$upload"
+		"uri": "https://storage.yandexcloud.net/$cld/$upload"
 	}
 }
 -EOF
@@ -356,8 +359,8 @@ while [[ $fold != "y" || $fold != "n" ]]; do
 	read fold
 	if [[ $fold == "y" ]]; then 
 		aws --endpoint-url=https://storage.yandexcloud.net \
-			s3 cp audio/$upload s3://rash2/$upload
-			check=$(aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://rash2 | grep -o $upload)
+			s3 cp audio/$upload s3://$cld/$upload
+			check=$(aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://$cld | grep -o $upload)
 			if [[ $check == $upload ]]; then
 				cloud=t
 				upl_ts=$(date)
@@ -371,7 +374,7 @@ while [[ $fold != "y" || $fold != "n" ]]; do
 	fi
 		if [[ $fold == "n" ]]; then
 			echo "Этап загрузки пропущен, нужно выбрать из списка файлов на диске";
-			aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://rash2
+			aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://$cld
 			exit
 			break;
 		else
@@ -470,7 +473,7 @@ while [[ $fold != "y" || $fold != "n" ]]; do
 	fi
 	if [[ $fold == "y" ]]; then		
 		aws --endpoint-url=https://storage.yandexcloud.net \
-			s3 rm s3://rash2/$upload
+			s3 rm s3://$cld/$upload
 		rm audio/$upload
 		rm text/$out_txt
 		break;

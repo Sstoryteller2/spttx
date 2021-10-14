@@ -37,22 +37,25 @@ if [[ "$key" && "$key" != 0 ]]; then
 		tok="no"
 fi
 
+cld=$(grep "cloud" data | sed 's/.* //')
 token=0
+cloud=0
 
-while [[ $REPLY != [0-5]  ]]; do
+while [[ $REPLY != [0-6]  ]]; do
 	read -p "Выберите настройки:
 1. Язык (русский, казахский): $lng
 2. Числа: словами или цифрами: $nm
 3. Обсценная лексика (мат): $obc
 4. Время отложенного распознания: $dfdf $def_l $def_t
 5. TOKEN $tok
+6. Название облака (https://storage.yandexcloud.net/$cld/) $cld
 
 0. Выход
 "
-	if [[ "$REPLY" =~ ^[0-5]$ ]]; then
+	if [[ "$REPLY" =~ ^[0-6]$ ]]; then
 		if [[ "$REPLY" == 0 ]]; then
-			if [[ "$tok" != "yes" ]]; then
-				echo "Без токена работать не будет"
+			if [[ "$tok" != "yes" || "$cld" == 0 ]]; then
+				echo "Без токена и облака работать не будет"
 			fi
 			echo bye-bye
 			break			
@@ -238,8 +241,26 @@ while [[ $REPLY != [0-5]  ]]; do
 				fi
 			done
 		fi
+		if [[ "$REPLY" == 6 ]]; then
+			REPLY=NULL
+			while [[ "$cloud" == "0" ]]; do
+				echo  "вставьте название облака (0 - вернуться)  "
+				read cloud
+				if [[ "$cloud" == "0" ]]; then
+					cld="no"
+					break;
+				fi
+				if [[  "$cloud" && "$cloud" != "0" ]]; then
+					sed -i "s/cloud $cld/cloud $cloud/" data
+					echo "облако добавлено"
+					cld=$cloud
+					cloud=0	
+					break			
+				fi
+			done
+		fi
 	else
-		echo "введите числа от 0 до 4"
+		echo "введите числа от 0 до 6"
 	fi
 done
 
@@ -269,10 +290,14 @@ def_t=$(grep "def_t" data | sed 's/.* //')
 def_l=$(grep "def_l" data | sed 's/.* //')
 key=$(grep "key" data | sed 's/.* //')
 
-if [[ "$key" ]]; then
+if [[ "$key" && "$key" != 0 ]]; then
 	tok="yes"
 	else
 		tok="no"
+fi
+cld=$(grep "cloud" data | sed 's/.* //')
+if [[ "$cld" == 0 ]]; then
+	cld="no"
 fi
 echo "
 
@@ -282,5 +307,6 @@ echo "
 3. Обсценная лексика (мат): $obc
 4. Время отложенного распознания: $dfdf $def_l $def_t
 5. TOKEN $tok
+6. Название облака (https://storage.yandexcloud.net/$cld/) $cld
 "
 exit
