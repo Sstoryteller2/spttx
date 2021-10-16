@@ -75,7 +75,7 @@ vim data
 3. Обсценная лексика (мат): мат вкл
 4. Время отложенного распознания:  10 min
 5. TOKEN yes
-6. Название облака (https://storage.yandexcloud.net/<baket-name>/) <baken-name>
+6. Название облака (https://storage.yandexcloud.net/<baket-name>/) <baket-name>
 
 проверка установки ffmpeg: ok
 проверка установки at: ok
